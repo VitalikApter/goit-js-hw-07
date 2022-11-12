@@ -1,27 +1,72 @@
 import { galleryItems } from './gallery-items.js';
 // Change code below this line
 
-const refs = {
-    galleryCollection: document.querySelector('.gallery'),
-    body: document.body,
-};
+const galleryContainerEl = document.querySelector('.gallery');
+const backdropImg = basicLightbox.create('<img >');
 
+galleryContainerEl.innerHTML = createGalleryMarkup(galleryItems);
 
-function makeGalleryItems (items) {
-    return items 
+addLazyloadToImg();
+
+galleryContainerEl.addEventListener('click', onGalleryImageClick);
+
+function createGalleryMarkup (galleryItems) {
+    return galleryItems
     .map(({ preview, original, description }) => {
-        return '<div class="gallery__item">
-        <a class="gallery__link" href=`${original}`>
-        <img loading="lazy" width="254" height="240" 
+        return `<div class="gallery__item">
+        <a class="gallery__link" href="${original}">
+        <img 
         class="gallery__image" 
-        src=`${preview}`
-        data-source=`${original}`
-        alt`${description}`
+        src="${preview}"
+        data-source="${original}"
+        alt="${description}"
         />
         </a>
-        </div>';
+        </div>`;
     })
-    .join('');
-} 
+    .join("");
+}
+
+function onGalleryImageClick (event) {
+    if (event.target.nodeName !== "IMG") {
+        return;
+    }
+    event.preventDefault();
+    const originalImgUrl = event.target.dataset.source;
+    backdropImg.element().querySelector('img').src = originalImgUrl;
+    backdropImg.show();
+    document.addEventListener('keydown', onEscKeyDownBackdropClose);
+}
+
+function onEscKeyDownBackdropClose (event) {
+    if (!(backdropImg.visible() && event.key === "Escape")) {
+        return;
+    }
+    backdropImg.close();
+    document.removeEventListener('keydown', onEscKeyDownBackdropClose);
+};
+
+function addLazyloadToImg () {
+    const lazyImages = document.querySelectorAll('gallery_image');
+    if ("loading" in HTMLImageElement.prototype) {
+        lazyImages.forEach((imgEl) => {
+            imgEl.loading = "lazy";
+        });
+        const lazyScript = document.createElement('script');
+    }else {
+        console.log('Wrong!!');
+        const lazyScript = document.createElement('script');
+        lazyScript.src = 
+        "https:cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js";
+        lazyScript.integrity = 
+        "sha512-q583ppKrCRc7N500n2nzUiJ+suUv7Et1JGels4bX0aMFQcamPk9HjdUknZuuFjBNs7tsMuadge5k9Rzdm0+1GQ==";
+        lazyScript.crossOrigin = "anonymous";
+        lazyScript.referrerPolicy = "no-referrer";
+        document.body.appendChild(lazyScript);
+    }
+}
+
+
+
 
 
